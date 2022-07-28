@@ -120,3 +120,129 @@ Marry marry = (Marry) jdkHandler.getProxy();
 //通过代理对象调用目标对象的方法
 marry.toMarry();
 ```
+
+----------------------------------
+
+### 2.3 CGLIB动态代理
+
+​		 JDK的动态代理机制只能代理实现了接口的类，而不能实现接口的类就不能使用JDK的动态代理，cglib是针对类来实现代理的，它的原理是对指定的目标类生成一个子类，并覆盖其中方法实现增强，但因为采用的是继承，所以不能对final修饰的类进行代理。
+
+​		 实现原理：**继承思想**
+
+​		 代理类继承目标类，重写目标类中的方法。
+
+-------
+
+#### 2.3.1 添加依赖
+
+```xml
+<!-- https://mvnrepository.com/artifact/cglib/cglib -->
+<dependency>
+  <groupId>cglib</groupId>
+  <artifactId>cglib</artifactId>
+  <version>3.3.0</version>
+</dependency>
+```
+
+------------
+
+#### 2.3.2 定义类
+
+​	实现MethodInterceptor接口
+
+```java
+public class CglibInterceptor implements MethodInterceptor {
+//目标对象
+private Object target;
+
+//通过构造器传入目标对象
+public CglibInterceptor(Object target) {
+    this.target = target;
+}
+
+/**
+ * 获取代理对象
+ * @return
+ */
+public Object getProxy(){
+
+    //通过Enhancer对象中的create()方法生成一个类，用于生成代理对象
+    Enhancer enhancer = new Enhancer();
+
+    //设置父类（将目标类作为代理类的父类）
+    enhancer.setSuperclass(target.getClass());
+
+    //设置拦截器 回调对象为本身对象
+    enhancer.setCallback(this);
+
+    //生成代理类对象并返回给调用者
+    return enhancer.create();
+
+}
+
+/**
+ * 拦截器
+ *  1.目标对象的方法调用
+ *  2.行为增强
+ * @param o cglib动态生成的代理类的实例
+ * @param method    实体类所调用的被代理的方法的引用
+ * @param objects   参数列表
+ * @param methodProxy   生成的代理类对方法的代理引用
+ * @return
+ * @throws Throwable
+ */
+@Override
+public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
+
+    //增强行为
+    System.out.println("=================方法前执行");
+
+    //调用目标类中的方法
+    Object object = methodProxy.invoke(target, objects);
+
+    //增强行为
+    System.out.println("方法后执行=================");
+
+    return object;
+}
+}
+```
+---------
+
+#### 2.3.3 测试方法
+
+```java
+/*        //得到目标对象
+        You you = new You();
+
+        //得到拦截器
+        CglibInterceptor cglibInterceptor = new CglibInterceptor(you);
+
+        //得到代理对象
+        Marry marry = (Marry) cglibInterceptor.getProxy();
+
+        //通过代理对象调用目标对象的方法
+        marry.toMarry();*/
+
+
+        /*通过cglib动态代理实现：没有接口实现的类*/
+        //目标对象
+        User user = new User();
+        CglibInterceptor cglibInterceptor1 = new CglibInterceptor(user);
+        User u = (User) cglibInterceptor1.getProxy();
+        u.test();
+```
+
+----------
+
+#### 2.3.4 JDK代理与CGLIB代理的区别
+
++ JDK动态代理实现接口，Cglib动态代理继承思想
+
++ JDK动态代理（目标对象存在接口时）执行效率高于Ciglib
+
++ 如果目标对象有接口实现，选择JDK代理，如果没有接口实现选择Cglib代理
+
+---------
+
+## 3.Spring AOP

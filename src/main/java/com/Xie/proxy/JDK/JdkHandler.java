@@ -36,6 +36,8 @@ public class JdkHandler implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
+        System.out.println("invoke方法的proxy参数：" + proxy.getClass().getName());
+
         //用户的增强行为
         System.out.println("============方法执行前");
 
@@ -62,8 +64,10 @@ public class JdkHandler implements InvocationHandler {
      */
     public Object getProxy(){
 
+
         Object object = Proxy.newProxyInstance(this.getClass().getClassLoader(), target.getClass().getInterfaces(), this);
 
+        System.out.println("getProxy返回的代理对象：" + object.getClass().getName());
         return object;
     }
 
