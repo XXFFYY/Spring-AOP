@@ -26,6 +26,7 @@
       <scope>test</scope>
     </dependency>
 
+    <!--Spring-->
     <!-- https://mvnrepository.com/artifact/org.springframework/spring-context -->
     <dependency>
       <groupId>org.springframework</groupId>
@@ -33,11 +34,20 @@
       <version>5.3.22</version>
     </dependency>
 
+    <!--cglib-->
     <!-- https://mvnrepository.com/artifact/cglib/cglib -->
     <dependency>
       <groupId>cglib</groupId>
       <artifactId>cglib</artifactId>
       <version>3.3.0</version>
+    </dependency>
+
+    <!--Spring AOP-->
+    <!-- https://mvnrepository.com/artifact/org.aspectj/aspectjweaver -->
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjweaver</artifactId>
+      <version>1.9.9.1</version>
     </dependency>
 
   </dependencies>

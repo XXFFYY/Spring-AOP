@@ -246,3 +246,311 @@ public Object intercept(Object o, Method method, Object[] objects, MethodProxy m
 ---------
 
 ## 3.Spring AOP
+
+### 3.1 什么是AOP?
+
+​		 Aspect Oriented Programing 面向切面编程，相比较 oop 面向对象编程来说，Aop关注的不再是程序代码中某个类，某些方法，而aop考虑的更多的是一种面到面的切入，即层与层之间的一种切入，所以称之为切面。
+
+------------
+
+### 3.2 AOP能做什么？
+
+​		 AOP主要应用于日志记录，性能统计，安全控制,事务处理等方面，实现公共功能性的重复使用。
+
+-------------
+
+### 3.3 AOP的特点
+
+1. 降低模块与模块之间的耦合度，提高业务代码的聚合度。（高内聚低耦合）
+
+2. 提高了代码的复用性。
+
+3. 提高系统的扩展性。（高版本兼容低版本）
+
+4. 可以在不影响原有的功能基础上添加新的功能
+
+#### 3.3.1 AOP的底层实现
+
+​		　动态代理（JDK + CGLIB）
+
+-------------------------
+
+### 3.4 AOP基本概念
+
+#### 3.4.1 Joinpoint（连接点）
+
+​		 被拦截到的每个点，spring中指被拦截到的每一个方法，spring aop一个连接点即代表一个方法的执行。
+
+#### 3.4.2 Pointcut（切入点）
+
+​		 对连接点进行拦截的定义（匹配规则定义 规定拦截哪些方法，对哪些方法进行处理），spring 有专门的表达式语言定义。
+
+#### 3.4.3 Advice（通知）
+
+​		 拦截到每一个连接点即（每一个方法）后所要做的操作
+
+#### 3.4.4  Aspect（切面）
+
+​		 切入点与通知的结合，决定了切面的定义，切入点定义了要拦截哪些类的哪些方法，通知则定义了拦截过方法后要做什么，切面则是横切关注点的抽象，与类相似，类是对物体特征的抽象，切面则是横切关注点抽象。
+
+#### 3.4.5 Target（目标对象）
+
+​		 被代理的目标对象
+
+#### 3.4.6 Weave（织入）
+
+​		 将切面应用到目标对象并生成代理对象的这个过程即为织入
+
+#### 3.4.7 Introduction（引入）
+
+​		 在不修改原有应用程序代码的情况下，在程序运行期为类动态添加方法或者字段的过程称为引入
+
+--------------
+
+## 4. Spring AOP的实现
+
+### 4.1 Spring AOP环境搭建
+
+#### 4.1.1坐标依赖引入
+
+```xml
+<!--Spring AOP-->
+<!-- https://mvnrepository.com/artifact/org.aspectj/aspectjweaver -->
+<dependency>
+  <groupId>org.aspectj</groupId>
+  <artifactId>aspectjweaver</artifactId>
+  <version>1.9.9.1</version>
+  <scope>runtime</scope>
+</dependency>
+```
+
+#### 4.1.2 添加Spring.xml配置
+
+添加命名空间
+
+```xml
+xmlns:aop="http://www.springframework.org/schema/aop"
+```
+
+```xml
+http://www.springframework.org/schema/aop
+http://www.springframework.org/schema/aop/spring-aop.xsd
+```
+
+-------------
+
+### 4.2 注解实现
+
+#### 4.2.1 定义切面
+
+```java
+/**
+ * 切面
+ *      切入点和通知的抽象
+ *      定义 切入点 和 通知
+ *          切入点：定义要拦截哪些类的哪些方法
+ *          通知：定义拦截之后方法要做什么
+ */
+@Component  //将对象交给IOC容器进行实现
+@Aspect //声明当前类是一个切面
+public class LogCut {
+
+    /**
+     * 切入点
+     *      定义要拦截哪些类的哪些方法
+     *      匹配规则，拦截什么方法
+     *
+     *      定义切入点
+     *          @Pointcut("匹配规则")
+     *      AOP切入点表达式
+     *          1.执行所有的公共方法
+     *              execution(public *(..))
+     *          2.执行任意的set方法
+     *              execution(* set*.(..))
+     *          3.设置指定包下的任意类的任意方法 (指定包：com.Xie.service)
+     *              execution(* com.Xie.service.*.*(..))
+     *          4.设置指定包以及子包下任意类的任意方法(指定包：com.Xie.service)
+     *              execution(* com.Xie.service..*.*(..))
+     *          表达式中的第一个*
+     *              代表的是方法的修饰范围 （public、private、protected）
+     *              如果取值是*，则表示所有范围
+     */
+    @Pointcut("execution(* com.Xie.service..*.*(..))")
+    public void cut(){
+
+    }
+
+    /**
+     * 声明前置通知，并将通知应用到指定的切入点上
+     *      目标类的方法执行前，执行该通知
+     */
+    @Before(value = "cut()")
+    public void before(){
+        System.out.println("前置通知...");
+    }
+
+    /**
+     * 声明返回通知，并将通知应用到指定的切入点上
+     *      目标类的方法在无异常执行后，执行该通知
+     */
+    @AfterReturning(value = "cut()")
+    public void afterReturn(){
+        System.out.println("返回通知...");
+    }
+
+    /**
+     * 声明最终通知，并将通知应用到指定的切入点上
+     *      目标类的方法执行后，执行该通知（有无异常都会执行）
+     */
+    @After(value = "cut()")
+    public void after(){
+        System.out.println("最终通知...");
+    }
+
+    /**
+     * 声明异常通知，并将通知应用到指定的切入点上
+     *      目标类的方法执行异常时，执行该通知
+     */
+    @AfterThrowing(value = "cut()")
+    public void afterThrow(){
+        System.out.println("异常通知...");
+    }
+
+    /**
+     * 声明环绕通知，并将通知应用到指定的切入点上
+     *      目标类的方法执行前后，都可通过环绕通知定义相应的处理
+     *          需要通过显式调用的方法，否则无法访问指定方法 pjp.proceed();
+     */
+    @Around(value = "cut()")
+    public Object around(ProceedingJoinPoint pjp){
+        System.out.println("环绕通知-前置通知...");
+
+        Object object = null;
+
+        try {
+            //显式调用对应的方法
+            object = pjp.proceed();
+            System.out.println(pjp.getTarget());
+            System.out.println("环绕通知-返回通知...");
+        }catch (Throwable throwable){
+            throwable.printStackTrace();
+            System.out.println("环绕通知-异常通知...");
+        }
+        System.out.println("环绕通知-最终通知...");
+        return object;
+    }
+}
+```
+
+#### 4.2.2 配置文件(Spring.xml)
+
+```xml
+<!--配置AOP代理-->
+<aop:aspectj-autoproxy/>
+```
+
+----------
+
+### 4.3 XML实现
+
+#### 4.3.1 定义切面
+
+```java
+/**
+ * 切面
+ *      切入点和通知的抽象
+ *      定义 切入点 和 通知
+ *          切入点：定义要拦截哪些类的哪些方法
+ *          通知：定义拦截之后方法要做什么
+ */
+@Component  //将对象交给IOC容器进行实现
+public class LogCut02 {
+
+    public void cut(){
+
+    }
+
+    /**
+     * 声明前置通知，并将通知应用到指定的切入点上
+     *      目标类的方法执行前，执行该通知
+     */
+
+    public void before(){
+        System.out.println("前置通知...");
+    }
+
+    /**
+     * 声明返回通知，并将通知应用到指定的切入点上
+     *      目标类的方法在无异常执行后，执行该通知
+     */
+
+    public void afterReturn(){
+        System.out.println("返回通知...");
+    }
+
+    /**
+     * 声明最终通知，并将通知应用到指定的切入点上
+     *      目标类的方法执行后，执行该通知（有无异常都会执行）
+     */
+
+    public void after(){
+        System.out.println("最终通知...");
+    }
+
+    /**
+     * 声明异常通知，并将通知应用到指定的切入点上
+     *      目标类的方法执行异常时，执行该通知
+     */
+
+    public void afterThrow(){
+        System.out.println("异常通知...");
+    }
+
+    /**
+     * 声明环绕通知，并将通知应用到指定的切入点上
+     *      目标类的方法执行前后，都可通过环绕通知定义相应的处理
+     *          需要通过显式调用的方法，否则无法访问指定方法 pjp.proceed();
+     */
+
+    public Object around(ProceedingJoinPoint pjp){
+        System.out.println("环绕通知-前置通知...");
+
+        Object object = null;
+
+        try {
+            //显式调用对应的方法
+            object = pjp.proceed();
+            System.out.println(pjp.getTarget());
+            System.out.println("环绕通知-返回通知...");
+        }catch (Throwable throwable){
+            throwable.printStackTrace();
+            System.out.println("环绕通知-异常通知...");
+        }
+        System.out.println("环绕通知-最终通知...");
+        return object;
+    }
+}
+```
+
+#### 4.3.2 配置文件(spring.xml)
+
+```xml
+<!-- AOP相关配置-->
+<aop:config>
+    <!-- AOP切面-->
+    <aop:aspect ref="logCut02">
+        <!-- 定义aop切入点 -->
+        <aop:pointcut id="cut" expression="execution(* com.Xie.service.*.*(..))"/>
+        <!-- 配置前置通知:设置前置通知对应的方法名及切入点 -->
+        <aop:before method="before" pointcut-ref="cut"/>
+        <!-- 配置返回通知:设置返回通知对应的方法名及切入点 -->
+        <aop:after-returning method="afterReturn" pointcut-ref="cut"/>
+        <!-- 配置最终通知:设置最终通知对应的方法名及切入点 -->
+        <aop:after method="after" pointcut-ref="cut"/>
+        <!-- 配置异常通知:设置异常通知对应的方法名及切入点 -->
+        <aop:after-throwing method="afterThrow" pointcut-ref="cut"/>
+        <!-- 配置环绕通知:设置环绕通知对应的方法名及切入点 -->
+        <aop:around method="around" pointcut-ref="cut"/>
+    </aop:aspect>
+</aop:config>
+```
